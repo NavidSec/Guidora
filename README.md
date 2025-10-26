@@ -1,4 +1,4 @@
-# Guidora – Mobile Consultation Platform (Android + FastAPI)
+# Guidora – Mobile Consultation Platform
 
 Guidora is a mobile-based consultation platform designed to connect users with qualified experts for scheduled advisory sessions. Specialists such as legal, academic, or career consultants can provide paid consulting services based on predefined time durations and pricing models.
 
