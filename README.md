@@ -8,7 +8,7 @@ This repository contains both the client-side Android application and the backen
 
 ## Project Architecture
 
-Guidora
+Guidora: 
 client       # Android - Kotlin 
 server       # Backend - Python 
 
