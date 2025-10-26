@@ -17,7 +17,7 @@ Guidora/
 ## Features
 
 - User authentication and onboarding
-- Expert registration and verification
+- Expert registration a
 - Appointment scheduling system
 - Pricing configuration for consulting services
 - JSON-based communication between client and server
@@ -41,37 +41,7 @@ Client:
 Server:
 - Python
 - FastAPI
-- Uvicorn ASGI server
-- SQL database integration (future update)
 - JWT authentication
-
-------------------------------------------------------------
-
-## Getting Started
-
-Clone Repository:
-git clone git@github.com:YOUR_USERNAME/Guidora.git
-cd Guidora
-
-Setup Client:
-cd client
-Open project in Android Studio
-Sync Gradle and run the application
-
-Setup Backend:
-cd server
-python3 -m venv env
-source env/bin/activate   (Linux/macOS)
-env\Scripts\activate      (Windows)
-pip install -r requirements.txt
-uvicorn main:app --reload
-
-Server will run on:
-http://127.0.0.1:8000
-
-API Documentation (auto generated):
-http://127.0.0.1:8000/docs
-
 ------------------------------------------------------------
 
 ## Client-Server Communication
@@ -81,9 +51,6 @@ The mobile client communicates with the backend via secure RESTful APIs using JS
 ------------------------------------------------------------
 
 ## Contributors
-
-- Android Development Team: 4 developers
-- Backend Development Team: 2 developers
 
 Repository managed collaboratively through GitHub workflow including branches and pull requests.
 
