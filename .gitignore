@@ -36,3 +36,4 @@ server/docker-compose.yml
 *.yml
 server/*.yml
 server/Dockerfile
+Dockerfile
