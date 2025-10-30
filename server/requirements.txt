@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+mongoengine
+pydantic
+python-dotenv
+httpx
+blinker>=1.6
+PyJWT>=2.8.0

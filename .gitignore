@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.env
+.env.* 
+.env.local
+.vscode/
+.DS_Store
+*.pem
+*.key
+id_rsa
+id_ed25519
+docker-compose.override.yml
+*.log
+node_modules/
+*.js
