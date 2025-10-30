@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 .env
@@ -10,6 +11,26 @@ __pycache__/
 id_rsa
 id_ed25519
 docker-compose.override.yml
-*.log
 node_modules/
 *.js
+=======
+.gradle/
+build/
+local.properties
+*.log
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+*.jks
+*.keystore
+google-services.json
+*.hprof
+>>>>>>> origin/master
