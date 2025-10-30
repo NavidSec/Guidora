@@ -35,3 +35,4 @@ google-services.json
 server/docker-compose.yml
 *.yml
 server/*.yml
+server/Dockerfile
