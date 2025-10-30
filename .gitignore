@@ -32,4 +32,6 @@ render.experimental.xml
 *.keystore
 google-services.json
 *.hprof
+server/docker-compose.yml
 *.yml
+server/*.yml
