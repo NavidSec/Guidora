@@ -1,19 +1,17 @@
-# auth/verify_otp.py
 import os
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from database.db import User, Specialties
+from database.db import User
 
 router = APIRouter()
-logger = logging.getLogger("auth.verify-otp")
+logger = logging.getLogger("auth.verify_otp")
 
-JWT_SECRET: Optional[str] = os.getenv("GUIDORA_JWT_SECRET")
+JWT_SECRET: str = os.getenv("GUIDORA_JWT_SECRET")
 if not JWT_SECRET:
     logger.critical("Environment variable GUIDORA_JWT_SECRET is not set. Aborting startup.")
     raise RuntimeError("Missing required environment variable: GUIDORA_JWT_SECRET")
@@ -27,7 +25,6 @@ except ValueError:
 class VerifyOtpRequest(BaseModel):
     number: str
     otp: str
-    roll: bool = False
 
 class VerifyOtpResponse(BaseModel):
     token: str
@@ -37,10 +34,8 @@ class VerifyOtpResponse(BaseModel):
 async def verify_otp_endpoint(payload: VerifyOtpRequest):
     number = payload.number.strip()
     otp = payload.otp.strip()
-    roll = payload.roll
 
-    model_cls = Specialties if roll else User
-    obj = model_cls.objects(number=number).first()
+    obj = User.objects(number=number).first()
 
     if not obj:
         raise HTTPException(status_code=404, detail="Number not found")
@@ -59,7 +54,6 @@ async def verify_otp_endpoint(payload: VerifyOtpRequest):
     token_payload = {
         "uid": str(obj.id),
         "number": number,
-        "roll": roll,
         "exp": expire_at
     }
 
