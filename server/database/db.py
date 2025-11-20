@@ -75,10 +75,10 @@ class User(BaseUser):
 
 class Specialties(BaseUser):
     meta = {'collection': 'specialties'}
-
-    specialty = ListField(StringField(max_length=20), default=list)
     tag = ListField(DynamicField(), default=list)
     about = StringField(max_length=250, default="")
+    educert = StringField(max_length=150, default="")
+
 
 
     def clean(self):
