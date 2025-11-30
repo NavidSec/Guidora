@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 import logging
 
 from database.db import User, Specialties
@@ -25,97 +25,50 @@ class UserInfo(BaseModel):
     lname: Optional[str] = None
     gender: Optional[str] = None
     age: Optional[int] = None
-    role: str  # "user" or "specialist"
+    role: str
 
 class HomeResponse(BaseModel):
     current_user: UserInfo
     specialists: List[SpecialistInfo]
 
-def get_current_user(token: str) -> User:
-    """Extract and validate current user from token"""
+@router.get("/home")
+async def get_homepage(token: str):
     user = User.objects(token=token).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid token")
-    return user
-
-@router.get("/home", response_model=HomeResponse)
-async def get_homepage(token: str):
-    """
-    Get homepage data including current user info and all specialists
-    """
-    try:
-        # Get current user
-        current_user = get_current_user(token)
-        
-        # Determine user role and prepare user info
-        is_specialist = Specialties.objects(uid=current_user.uid).first() is not None
-        role = "specialist" if is_specialist else "user"
-        
-        user_info = UserInfo(
-            uid=current_user.uid,
-            number=current_user.number,
-            fname=current_user.fname,
-            lname=current_user.lname,
-            gender=current_user.gender,
-            age=current_user.age,
-            role=role
+    
+    specialist_check = Specialties.objects(uid=user.uid).first()
+    user_role = "specialist" if specialist_check else "user"
+    
+    user_data = UserInfo(
+        uid=user.uid,
+        number=user.number,
+        fname=user.fname,
+        lname=user.lname,
+        gender=user.gender,
+        age=user.age,
+        role=user_role
+    )
+    
+    all_specialists = Specialties.objects().all()
+    specialists_list = []
+    
+    for spec in all_specialists:
+        spec_info = SpecialistInfo(
+            uid=spec.uid,
+            fname=spec.fname,
+            lname=spec.lname,
+            gender=spec.gender,
+            age=spec.age,
+            tag=spec.tag if hasattr(spec, 'tag') else [],
+            about=spec.about if hasattr(spec, 'about') else "",
+            educert=spec.educert if hasattr(spec, 'educert') else ""
         )
-        
-        # Get all specialists with their complete information
-        specialists_data = []
-        specialists = Specialties.objects().all()
-        
-        for specialist in specialists:
-            specialist_info = SpecialistInfo(
-                uid=specialist.uid,
-                fname=specialist.fname,
-                lname=specialist.lname,
-                gender=specialist.gender,
-                age=specialist.age,
-                tag=specialist.tag if hasattr(specialist, 'tag') else [],
-                about=specialist.about if hasattr(specialist, 'about') else "",
-                educert=specialist.educert if hasattr(specialist, 'educert') else ""
-            )
-            specialists_data.append(specialist_info)
-        
-        logger.info(f"Homepage data retrieved for user {current_user.uid}. Found {len(specialists_data)} specialists.")
-        
-        return HomeResponse(
-            current_user=user_info,
-            specialists=specialists_data
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Error retrieving homepage data: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-# Optional: Add a public endpoint to get only specialists (if needed for non-authenticated views)
-@router.get("/public/specialists", response_model=List[SpecialistInfo])
-async def get_public_specialists():
-    """
-    Get all specialists (public endpoint without authentication)
-    """
-    try:
-        specialists_data = []
-        specialists = Specialties.objects().all()
-        
-        for specialist in specialists:
-            specialist_info = SpecialistInfo(
-                uid=specialist.uid,
-                fname=specialist.fname,
-                lname=specialist.lname,
-                gender=specialist.gender,
-                age=specialist.age,
-                tag=specialist.tag if hasattr(specialist, 'tag') else [],
-                about=specialist.about if hasattr(specialist, 'about') else "",
-                educert=specialist.educert if hasattr(specialist, 'educert') else ""
-            )
-            specialists_data.append(specialist_info)
-        
-        return specialists_data
-        
-    except Exception as e:
-        logger.exception(f"Error retrieving public specialists: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        specialists_list.append(spec_info)
+    
+    logger.info(f"Homepage data sent for user {user.uid}. Specialists count: {len(specialists_list)}")
+    
+    return HomeResponse(
+        current_user=user_data,
+        specialists=specialists_list
+    )
