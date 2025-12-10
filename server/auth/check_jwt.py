@@ -35,4 +35,4 @@ async def check_jwt(payload: AuthCheckRequest):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    return {"ok": True, "number": user.number}
+    return {"ok": True}
