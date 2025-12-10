@@ -1,7 +1,16 @@
 from mongoengine import (
-    Document, StringField, DateTimeField, ListField,
-    IntField, signals, ValidationError, connect
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentField,
+    StringField,
+    DateTimeField,
+    ListField,
+    IntField,
+    signals,
+    ValidationError,
+    connect
 )
+
 from datetime import datetime, timedelta
 import os, re, uuid
 

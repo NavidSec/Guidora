@@ -35,7 +35,7 @@ app.include_router(set_info_router, prefix="/auth")
 
 # Home routes (homepage, user listings)
 app.include_router(homepage_router, prefix="/home")
-app.include_router(users_router, prefix="/home")
+#app.include_router(users_router, prefix="/home")
 
 # Profile routes (specialist and user profiles)
 app.include_router(spe_profile_router, prefix="/profile")

@@ -10,7 +10,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
-from database.db import User
+from database.database import User
 
 router = APIRouter()
 logger = logging.getLogger("auth.sent_otp")

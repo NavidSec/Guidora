@@ -6,7 +6,7 @@ import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from database.db import User
+from database.database import User
 
 router = APIRouter()
 logger = logging.getLogger("auth.verify_otp")

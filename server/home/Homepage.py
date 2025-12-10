@@ -4,7 +4,7 @@ from typing import List, Optional
 import logging
 from mongoengine.errors import DoesNotExist, OperationError
 
-from database.db import User, Specialties
+from database.database import User, Specialties
 
 router = APIRouter()
 log = logging.getLogger("home")

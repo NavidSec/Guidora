@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from database.db import User
+from database.database import User
 import jwt
 
 router = APIRouter()
