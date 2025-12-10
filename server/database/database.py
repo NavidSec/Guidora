@@ -76,11 +76,16 @@ class BaseUser(Document):
 class User(BaseUser):
     meta = {'collection': 'users'}
 
+class TimeSlot(EmbeddedDocument):
+    start = DateTimeField(required=True)
+    end = DateTimeField(required=True)
+
 class Specialties(BaseUser):
     meta = {'collection': 'specialties'}
     tag = ListField(StringField(), default=list)  
     about = StringField(max_length=250, default="")
     educert = StringField(max_length=150, default="")
+    available_slots = ListField(EmbeddedDocumentField(TimeSlot), default=list)
 
     def clean(self):
         super().clean()
