@@ -1,16 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from typing import Optional
 from mongoengine import connect, DoesNotExist
 import os
-from models import Specialties
+from database.database import Specialties
+
+router = APIRouter()  
 
 MONGO_URI = os.environ.get("MONGO_URI")
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set!")
 
 connect(host=MONGO_URI)
-app = FastAPI()
 
 class SpecialtiesUpdate(BaseModel):
     uid: str
@@ -31,7 +32,7 @@ def verify_token(uid: str, token: str) -> bool:
     except DoesNotExist:
         return False
 
-@app.post("/update_specialist")
+@router.post("/set_spe_profile") 
 async def update_specialist(data: SpecialtiesUpdate):
     if not verify_token(data.uid, data.token):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid token")

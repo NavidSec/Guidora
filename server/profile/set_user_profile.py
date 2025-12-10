@@ -1,8 +1,11 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+# profile/set_user_profile.py
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from mongoengine import connect, DoesNotExist
 import os
-from allusers import User, Specialties  
+from database.database import User, Specialties
+
+router = APIRouter()
 
 MONGO_URI = os.environ.get("MONGO_URI")
 if not MONGO_URI:
@@ -10,15 +13,13 @@ if not MONGO_URI:
 
 connect(host=MONGO_URI)
 
-app = FastAPI()
-
 class UserUpdate(BaseModel):
     uid: str
     fname: str
     lname: str
     age: int
     gender: str
-    number:int
+    number: int
     token: str
 
 def verify_token(uid: str, token: str) -> bool:
@@ -28,7 +29,7 @@ def verify_token(uid: str, token: str) -> bool:
     except DoesNotExist:
         return False
 
-@app.post("/set_user_profile")
+@router.post("/set_user_profile", tags=["Profile"])
 async def update_user(data: UserUpdate):
     if not verify_token(data.uid, data.token):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid token")
@@ -41,7 +42,7 @@ async def update_user(data: UserUpdate):
             obj.lname = data.lname
             obj.age = data.age
             obj.gender = data.gender
-            number=data.number 
+            obj.number = data.number  
             obj.save()
             result[name] = "updated"
         except DoesNotExist:
@@ -51,7 +52,7 @@ async def update_user(data: UserUpdate):
                 lname=data.lname,
                 age=data.age,
                 gender=data.gender,
-                number=data.number 
+                number=data.number
             )
             obj.save()
             result[name] = "created"

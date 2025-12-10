@@ -1,24 +1,24 @@
-from fastapi import FastAPI, HTTPException
-from models import Specialties, TimeSlot
+from fastapi import APIRouter, HTTPException
+from database.database import Specialties, TimeSlot
 from mongoengine import connect
 from datetime import datetime, timedelta
 from pydantic import BaseModel
-from datetime import datetime
 from typing import List
-
+import os
 
 MONGO_URI = os.environ.get("MONGO_URI")
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set!")
 
 connect(host=MONGO_URI)
-app = FastAPI()
+
+router = APIRouter()
 
 class AvailabilityRequest(BaseModel):
     uid: str
     slots: List[dict]   
 
-@app.post("/set_spe_avi_slots")
+@router.post("/set_spe_avi_slots")
 def set_availability(data: AvailabilityRequest):
     counselor = Specialties.objects(uid=data.uid).first()
     if not counselor:
