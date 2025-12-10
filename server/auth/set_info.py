@@ -10,7 +10,7 @@ async def set_info(request: Request):
     uid = data.get("uid")
     fname = data.get("fname")
     lname = data.get("lname")
-    tag = data.get("tag", "").lower()  
+    tag = data.get("tag", "")
 
     if not uid or not fname or not lname:
         raise HTTPException(status_code=400, detail="uid, fname and lname are required")
