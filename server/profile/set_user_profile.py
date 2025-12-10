@@ -18,6 +18,7 @@ class UserUpdate(BaseModel):
     lname: str
     age: int
     gender: str
+    number:int
     token: str
 
 def verify_token(uid: str, token: str) -> bool:
@@ -27,7 +28,7 @@ def verify_token(uid: str, token: str) -> bool:
     except DoesNotExist:
         return False
 
-@app.post("/update")
+@app.post("/set_user_profile")
 async def update_user(data: UserUpdate):
     if not verify_token(data.uid, data.token):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid token")
@@ -40,6 +41,7 @@ async def update_user(data: UserUpdate):
             obj.lname = data.lname
             obj.age = data.age
             obj.gender = data.gender
+            number=data.number 
             obj.save()
             result[name] = "updated"
         except DoesNotExist:
@@ -49,7 +51,7 @@ async def update_user(data: UserUpdate):
                 lname=data.lname,
                 age=data.age,
                 gender=data.gender,
-                number="09123456789" 
+                number=data.number 
             )
             obj.save()
             result[name] = "created"
