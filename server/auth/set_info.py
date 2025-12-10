@@ -8,57 +8,44 @@ async def set_info(request: Request):
     data = await request.json()
 
     uid = data.get("uid")
-    number = data.get("number")
-    role = data.get("role")  
+    fname = data.get("fname")
+    lname = data.get("lname")
+    tag = data.get("tag", "").lower()  
 
-    if not uid or not number or role is None:
-        raise HTTPException(status_code=400, detail="uid, number and role are required")
+    if not uid or not fname or not lname:
+        raise HTTPException(status_code=400, detail="uid, fname and lname are required")
 
-    if role:
+    if tag in ["edu", "law"]:
         obj = Specialties.objects(uid=uid).first()
         if obj:
             obj.update(
-                set__number=number,
-                set__fname=data.get("fname"),
-                set__lname=data.get("lname"),
-                set__age=data.get("age"),
-                set__gender=data.get("gender"),
-                set__tag=data.get("tag"),
-                set__idio_secret=data.get("educert"),
-                set__about=data.get("about")
+                set__fname=fname,
+                set__lname=lname,
+                set__tag=tag
             )
         else:
             obj = Specialties(
                 uid=uid,
-                number=number,
-                fname=data.get("fname"),
-                lname=data.get("lname"),
-                age=data.get("age"),
-                gender=data.get("gender"),
-                tag=data.get("tag", []),
-                idio_secret=data.get("educert"),
-                about=data.get("about", "")
+                fname=fname,
+                lname=lname,
+                tag=tag
             )
             obj.save()
+        role = "Specialist"
     else:
         obj = User.objects(uid=uid).first()
         if obj:
             obj.update(
-                set__number=number,
-                set__fname=data.get("fname"),
-                set__lname=data.get("lname"),
-                set__age=data.get("age"),
-                set__gender=data.get("gender")
+                set__fname=fname,
+                set__lname=lname
             )
         else:
             obj = User(
                 uid=uid,
-                number=number,
-                fname=data.get("fname"),
-                lname=data.get("lname"),
-                age=data.get("age"),
-                gender=data.get("gender")
+                fname=fname,
+                lname=lname
             )
             obj.save()
+        role = "User"
 
-    return {"ok": True, "role": "Specialist" if role else "User", "uid": uid, "number": number}
+    return {"ok": True, "role": role, "uid": uid, "fname": fname, "lname": lname}
