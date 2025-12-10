@@ -2,6 +2,6 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.get("/list")
-async def list_users():
-    return {"users": ["Alice", "Bob"]}
+@router.get("/test-slot")
+async def test_slot():
+    return {"message": "User slot endpoint works!"}
