@@ -19,7 +19,7 @@ class UserUpdate(BaseModel):
     lname: str
     age: int
     gender: str
-    number: int
+    number: str
     token: str
 
 def verify_token(uid: str, token: str) -> bool:
@@ -57,4 +57,4 @@ async def update_user(data: UserUpdate):
             obj.save()
             result[name] = "created"
 
-    return {"status": "success", "details": result}
+    return {"details": result}

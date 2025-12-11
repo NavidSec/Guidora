@@ -69,4 +69,4 @@ async def update_specialist(data: SpecialtiesUpdate):
         specialist.save()
         status = "created"
 
-    return {"status": status, "uid": data.uid, "tag_saved": tag_upper}
+    return {"status": status}
