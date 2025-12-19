@@ -4,7 +4,6 @@ import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from database.database import User, Specialties
-from bson import ObjectId 
 
 router = APIRouter()
 logger = logging.getLogger("auth.check_jwt")
@@ -22,23 +21,26 @@ async def check_jwt(payload: AuthCheckRequest):
     token = payload.token.strip()
 
     try:
-        obj_id = ObjectId(uid)
-        
-        user_obj = User.objects(id=obj_id, token=token).first() or \
-                   Specialties.objects(id=obj_id, token=token).first()
+        user_obj = User.objects(uid=uid, token=token).first() or \
+                   Specialties.objects(uid=uid, token=token).first()
 
         if not user_obj:
-            debug_user = User.objects(id=obj_id).first()
+            debug_user = User.objects(uid=uid).first() or Specialties.objects(uid=uid).first()
             if debug_user:
-                logger.warning(f"User {uid} found, but TOKEN in DB is different from what Android sent!")
+                logger.warning(f"User {uid} found, but TOKEN in DB is different!")
             else:
-                logger.warning(f"No user found with ID: {uid}")
+                logger.warning(f"No user found with UID: {uid}")
             
             raise HTTPException(status_code=401, detail="Invalid UID or Token")
 
         jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        
         return {"ok": True}
 
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token format")
     except Exception as e:
-        logger.error(f"Auth error: {str(e)}")
+        logger.error(f"Auth error: {str(e)}") 
         raise HTTPException(status_code=401, detail="Authentication failed")

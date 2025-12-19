@@ -1,17 +1,16 @@
 import os
 from datetime import datetime, timedelta
 import logging
-
 import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from database.database import User, Specialties
+from database.database import User
 
 router = APIRouter()
 logger = logging.getLogger("auth.verify_otp")
 
-JWT_SECRET: str = os.getenv("GUIDORA_JWT_SECRET")
+# تنظیمات JWT
+JWT_SECRET = os.getenv("GUIDORA_JWT_SECRET", "your-fallback-secret")
 JWT_ALGORITHM = os.getenv("GUIDORA_JWT_ALGO", "HS256")
 
 try:
@@ -35,24 +34,23 @@ async def verify_otp_endpoint(payload: VerifyOtpRequest):
     obj = User.objects(number=number).first()
 
     if not obj:
-        raise HTTPException(status_code=404, detail="Number not found")
+        raise HTTPException(status_code=404, detail="شماره موبایل یافت نشد")
 
     if not getattr(obj, "otp", None) or obj.otp != otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
+        raise HTTPException(status_code=400, detail="کد وارد شده اشتباه است")
 
-    if getattr(obj, "otp_set_at", None) and (datetime.utcnow() - obj.otp_set_at).total_seconds() > 180:
-        try:
+    if getattr(obj, "otp_set_at", None):
+        diff = (datetime.utcnow() - obj.otp_set_at).total_seconds()
+        if diff > 180:
             obj.update(unset__otp=1, unset__otp_set_at=1)
-        except Exception:
-            logger.exception("Failed to unset expired OTP fields")
-        raise HTTPException(status_code=400, detail="OTP expired")
+            raise HTTPException(status_code=400, detail="کد منقضی شده است")
+
+    user_uid = str(obj.uid) 
 
     expire_at = datetime.utcnow() + timedelta(days=JWT_EXPIRE_DAYS)
     
-    user_id_str = str(obj.id)
-    
     token_payload = {
-        "uid": user_id_str,
+        "uid": user_uid,
         "number": number,
         "exp": expire_at
     }
@@ -61,16 +59,16 @@ async def verify_otp_endpoint(payload: VerifyOtpRequest):
         token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     except Exception as e:
         logger.exception("Failed to encode JWT")
-        raise HTTPException(status_code=500, detail="Token generation error")
+        raise HTTPException(status_code=500, detail="خطا در تولید توکن")
 
     try:
-      
-        obj.token = token
-        obj.save()
-        
-        obj.update(unset__otp=1, unset__otp_set_at=1)
+        obj.update(
+            set__token=token,
+            unset__otp=1,
+            unset__otp_set_at=1
+        )
     except Exception as e:
         logger.exception("Failed to save token to database")
-        raise HTTPException(status_code=500, detail="Database error")
+        raise HTTPException(status_code=500, detail="خطای دیتابیس در ذخیره توکن")
 
-    return {"token": token, "uid": user_id_str}
+    return {"token": token, "uid": user_uid}

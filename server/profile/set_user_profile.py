@@ -29,7 +29,7 @@ def verify_token(uid: str, token: str) -> bool:
     except DoesNotExist:
         return False
 
-@router.post("/set_user_profile", tags=["Profile"])
+@router.post("/set_user_profile")
 async def update_user(data: UserUpdate):
     if not verify_token(data.uid, data.token):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid token")

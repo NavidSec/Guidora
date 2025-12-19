@@ -8,9 +8,6 @@ def read_root():
     return {"Welcome to Guidora API!  Navidsec Inc."}
 
 
-# --- Test Router ---
-from test_router import router as test_router
-
 # --- Auth Routers ---
 from auth.send_otp import router as send_otp_router
 from auth.verify_otp import router as verify_otp_router
@@ -33,7 +30,6 @@ from reservation.set_user_slot import router as user_slots_router
 # --- Include Routers ---
 
 # Test routes (ping, health check, etc.)
-app.include_router(test_router, prefix="/test")
 
 # Auth routes (OTP, registration, user info)
 app.include_router(send_otp_router, prefix="/auth")
