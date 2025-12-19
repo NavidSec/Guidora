@@ -39,19 +39,16 @@ class HomeData(BaseModel):
 @router.post("/homepage", response_model=HomeData)
 async def get_home_data(CurrentUser: CurrentUser_info):
     try:
-        # جستجو با pk چون اندروید _id را می‌فرستد
         user = User.objects(pk=CurrentUser.uid).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # اصلاح: فیلد توکن در دیتابیس شما 'token' نام دارد
         if getattr(user, "token", "") != CurrentUser.token:
             raise HTTPException(status_code=401, detail="Invalid token")
 
         is_specialist = Specialties.objects(pk=user.id).first() is not None
         role_type = "specialist" if is_specialist else "user"
 
-        # ساخت اطلاعات کاربر فعلی
         if role_type == "specialist":
             user_info = SpecialistData(
                 uid=str(user.id),
@@ -69,7 +66,6 @@ async def get_home_data(CurrentUser: CurrentUser_info):
                 role=role_type
             )
 
-        # لیست متخصصین
         all_specialists = Specialties.objects().all()
         specialist_list = [
             SpecialistData(

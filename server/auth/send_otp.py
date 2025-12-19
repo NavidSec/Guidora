@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 from database.database import User
 
-# ------------------ Config ------------------
 
 router = APIRouter()
 logger = logging.getLogger("auth.send_otp")
@@ -24,17 +23,14 @@ SMS_API_URL = os.environ.get(
 
 OTP_EXPIRE_SECONDS = 180
 
-# ------------------ Utils ------------------
 
 def generate_uid() -> str:
     return uuid.uuid4().hex
 
-# ------------------ Schemas ------------------
 
 class SendOtpRequest(BaseModel):
     number: str
 
-# ------------------ SMS Provider (OTP-based) ------------------
 
 async def send_otp_via_provider(number: str) -> tuple[bool, str | None, str | None]:
     """
@@ -68,7 +64,6 @@ async def send_otp_via_provider(number: str) -> tuple[bool, str | None, str | No
         logger.exception("SMS provider error")
         return False, None, str(e)
 
-# ------------------ Expire OTP ------------------
 
 async def expire_otp(number: str, delay: int):
     await asyncio.sleep(delay)
@@ -80,7 +75,6 @@ async def expire_otp(number: str, delay: int):
         user.save()
         logger.info("OTP expired for %s", number)
 
-# ------------------ Endpoint ------------------
 
 @router.post("/send_otp")
 async def send_otp_endpoint(
@@ -92,7 +86,6 @@ async def send_otp_endpoint(
     if not PHONE_RE.match(number):
         raise HTTPException(status_code=400, detail="Invalid phone number")
 
-    # 1️⃣ Call provider (they generate OTP)
     success, otp_code, error = await send_otp_via_provider(number)
 
     if not success:
@@ -100,7 +93,6 @@ async def send_otp_endpoint(
 
     now = datetime.utcnow()
 
-    # 2️⃣ Store OTP returned by provider
     try:
         User.objects(number=number).update_one(
             upsert=True,
@@ -114,10 +106,8 @@ async def send_otp_endpoint(
         logger.exception("Database error")
         raise HTTPException(status_code=500, detail="Database error")
 
-    # 3️⃣ Schedule expiration
     background_tasks.add_task(expire_otp, number, OTP_EXPIRE_SECONDS)
 
-    # 4️⃣ Clean response
     return {
         "ok": True,
         "sms_sent": True
