@@ -37,3 +37,4 @@ server/docker-compose.yml
 server/*.yml
 server/Dockerfile
 Dockerfile
+/mongo-init/
