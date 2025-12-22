@@ -38,7 +38,7 @@ class BaseUser(Document):
     number = StringField(required=True, regex=PHONE_RE)
     fname = StringField(max_length=70)
     lname = StringField(max_length=70)
-    gender = StringField(choices=("man", "woman"), required=False)
+    gender = StringField(choices=("male", "female"), required=False)
     age = IntField(min_value=10, max_value=99)
 
     otp = StringField(null=True)
