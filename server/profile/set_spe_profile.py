@@ -23,7 +23,7 @@ class SpecialtiesUpdate(BaseModel):
     number: str
     educert: Optional[str] = ""
     about: Optional[str] = ""
-    tag: str  
+    tag: Optional[str] = ""  
 
 def verify_token(uid: str, token: str) -> bool:
     try:
