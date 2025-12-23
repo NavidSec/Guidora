@@ -16,7 +16,7 @@ from auth.check_jwt import router as check_jwt_router
 
 # --- Home Routers ---
 from home.homepage import router as homepage_router
-from home.users import router as users_router
+from home.get_spe_info import router as get_spe_info_router
 
 # --- Profile Routers ---
 from profile.set_spe_profile import router as spe_profile_router
