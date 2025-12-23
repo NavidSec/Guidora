@@ -3,9 +3,10 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List
 from datetime import datetime, timedelta, timezone
 import os
-import jwt  
+import jwt
 from mongoengine import connect
-from database.database import Specialties, User  
+from database.database import Specialties, User
+
 router = APIRouter()
 
 MONGO_URI = os.environ.get("MONGO_URI")
@@ -15,7 +16,6 @@ if not MONGO_URI or not JWT_SECRET:
     raise RuntimeError("Environment variables MONGO_URI or GUIDORA_JWT_SECRET are not set!")
 
 connect(host=MONGO_URI)
-
 
 class SlotItem(BaseModel):
     day: str = Field(..., description="YYYY-MM-DD")
@@ -47,29 +47,22 @@ class AvailabilityRequest(BaseModel):
     token: str
     slots: List[SlotItem]
 
-
 def verify_jwt_and_uid(token: str, request_uid: str):
-
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         token_uid = payload.get("uid")
-        
         if not token_uid or token_uid != request_uid:
             raise HTTPException(status_code=401, detail="Token UID mismatch. Access denied.")
-        
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="JWT token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid JWT token")
 
-
 @router.post("/set_spe_avi_slots")
 async def set_availability(data: AvailabilityRequest):
     req_uid = data.uid.strip().lower()
-
     verify_jwt_and_uid(data.token, req_uid)
-
     counselor = Specialties.objects(uid=req_uid).first()
     
     if not counselor:
@@ -83,7 +76,6 @@ async def set_availability(data: AvailabilityRequest):
         day_dt = datetime.strptime(s.day, "%Y-%m-%d")
         sh, sm = map(int, s.start.split(":"))
         eh, em = map(int, s.end.split(":"))
-        
         start_dt = datetime(day_dt.year, day_dt.month, day_dt.day, sh, sm, tzinfo=timezone.utc)
         end_dt = datetime(day_dt.year, day_dt.month, day_dt.day, eh, em, tzinfo=timezone.utc)
         
@@ -97,7 +89,6 @@ async def set_availability(data: AvailabilityRequest):
             current_time += timedelta(minutes=30)
 
     unique_slots = list(dict.fromkeys(new_slots_iso))
-
     try:
         counselor.available_slots = unique_slots
         counselor.save()
@@ -107,6 +98,5 @@ async def set_availability(data: AvailabilityRequest):
     return {
         "status": "success",
         "specialist": f"{counselor.fname} {counselor.lname}",
-        "total_slots": len(unique_slots),
-        "message": "Availability schedule updated successfully."
+        "total_slots": len(unique_slots)
     }

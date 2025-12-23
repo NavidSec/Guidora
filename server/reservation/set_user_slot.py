@@ -43,10 +43,8 @@ def generate_iso_chunks(day_str, start_str, end_str):
     day = datetime.strptime(day_str, "%Y-%m-%d")
     sh, sm = map(int, start_str.split(":"))
     eh, em = map(int, end_str.split(":"))
-    
     start_dt = datetime(day.year, day.month, day.day, sh, sm, tzinfo=timezone.utc)
     end_dt = datetime(day.year, day.month, day.day, eh, em, tzinfo=timezone.utc)
-    
     chunks = []
     cur = start_dt
     while cur < end_dt:
@@ -58,7 +56,6 @@ def generate_iso_chunks(day_str, start_str, end_str):
 @router.post("/set_user_slot")
 async def set_user_slot(data: ReservationRequest):
     verify_jwt_and_uid(data.token, data.uid)
-
     current_user = User.objects(uid=data.uid).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -82,21 +79,18 @@ async def set_user_slot(data: ReservationRequest):
     available_set = set(specialist.available_slots)
     to_be_booked = [chunk for chunk in all_requested_chunks if chunk in available_set]
 
-    if not to_be_booked:
-        raise HTTPException(status_code=400, detail="Requested slots are not available")
+    if not to_be_booked or len(to_be_booked) != len(all_requested_chunks):
+        raise HTTPException(status_code=400, detail="Some requested slots are not available")
 
     try:
         specialist.update(pull_all__available_slots=to_be_booked)
-        
         current_user.update(
             set__appointments=to_be_booked,
+            set__last_specialist_uid=specialist.uid,
             set__reserved_specialist_fname=specialist.fname,
             set__reserved_specialist_lname=specialist.lname
         )
-
     except Exception:
         raise HTTPException(status_code=500, detail="Database update failed")
 
-    return {
-        "status": "success",
-    }
+    return {"status": "success", "reserved_count": len(to_be_booked)}

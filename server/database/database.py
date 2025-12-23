@@ -86,6 +86,8 @@ class User(BaseUser):
     meta = {'collection': 'users'}
     appointments = ListField(StringField(), default=list)
     last_specialist_uid = StringField(null=True)
+    reserved_specialist_fname = StringField(null=True)
+    reserved_specialist_lname = StringField(null=True)
 
 class Specialties(BaseUser):
     meta = {'collection': 'specialties'}
