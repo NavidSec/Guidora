@@ -85,6 +85,8 @@ class BaseUser(Document):
 class User(BaseUser):
     meta = {'collection': 'users'}
     appointments = ListField(StringField(), default=list)
+    reserved_slots = ListField(StringField())
+
 
 class Specialties(BaseUser):
     meta = {'collection': 'specialties'}
