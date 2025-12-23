@@ -19,7 +19,7 @@ class AuthRequest(BaseModel):
     token: str
 
 def verify_token_globally(uid: str, token: str):
-    for model in [User, Specialties]:
+    for model in [User]:
         user = model.objects(uid=uid).first()
         if user and user.token_value == token:
             return user
