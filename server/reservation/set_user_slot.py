@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict
-from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
+from typing import List
+from datetime import datetime, timedelta, timezone
 import os
 import jwt
-from database.database import User, Specialties
 from mongoengine import connect
+from database.database import Specialties, User
 
 router = APIRouter()
 
@@ -17,9 +17,17 @@ if not MONGO_URI or not JWT_SECRET:
 
 connect(host=MONGO_URI)
 
-class AuthRequest(BaseModel):
+class BookingSlot(BaseModel):
+    day: str = Field(..., description="YYYY-MM-DD")
+    start: str = Field(..., description="HH:MM")
+    end: str = Field(..., description="HH:MM")
+
+class ReservationRequest(BaseModel):
     uid: str
     token: str
+    fname: str
+    lname: str
+    slots: List[BookingSlot]
 
 def verify_jwt_and_uid(token: str, request_uid: str):
     try:
@@ -31,64 +39,64 @@ def verify_jwt_and_uid(token: str, request_uid: str):
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-def consolidate_slots(iso_slots: List[str]) -> List[Dict]:
-    if not iso_slots:
-        return []
+def generate_iso_chunks(day_str, start_str, end_str):
+    day = datetime.strptime(day_str, "%Y-%m-%d")
+    sh, sm = map(int, start_str.split(":"))
+    eh, em = map(int, end_str.split(":"))
+    
+    start_dt = datetime(day.year, day.month, day.day, sh, sm, tzinfo=timezone.utc)
+    end_dt = datetime(day.year, day.month, day.day, eh, em, tzinfo=timezone.utc)
+    
+    chunks = []
+    cur = start_dt
+    while cur < end_dt:
+        iso = cur.isoformat().replace("+00:00", "Z")
+        chunks.append(iso)
+        cur += timedelta(minutes=30)
+    return chunks
 
-    dts = sorted([datetime.fromisoformat(s.replace('Z', '+00:00')) for s in iso_slots])
-    merged = []
-    if not dts: return []
-
-    start_time = dts[0]
-    current_time = dts[0]
-
-    for i in range(1, len(dts)):
-        if dts[i] == current_time + timedelta(minutes=30):
-            current_time = dts[i]
-        else:
-            merged.append({
-                "day": start_time.strftime("%Y-%m-%d"),
-                "start": start_time.strftime("%H:%M"),
-                "end": (current_time + timedelta(minutes=30)).strftime("%H:%M")
-            })
-            start_time = dts[i]
-            current_time = dts[i]
-
-    merged.append({
-        "day": start_time.strftime("%Y-%m-%d"),
-        "start": start_time.strftime("%H:%M"),
-        "end": (current_time + timedelta(minutes=30)).strftime("%H:%M")
-    })
-    return merged
-
-@router.post("/get_reserved_slots")
-async def get_user_appointments(data: AuthRequest):
+@router.post("/set_user_slot")
+async def set_user_slot(data: ReservationRequest):
     verify_jwt_and_uid(data.token, data.uid)
 
-    user = User.objects(uid=data.uid).first()
-    if not user:
+    current_user = User.objects(uid=data.uid).first()
+    if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    raw_slots = user.appointments
-    if not raw_slots:
-        return {
-            "fname": user.fname,
-            "lname": user.lname,
-            "specialist": None,
-            "slots": {}
-        }
+    specialist = Specialties.objects(
+        fname=data.fname.lower(), 
+        lname=data.lname.lower()
+    ).first()
     
-    formatted_slots = consolidate_slots(raw_slots)
-    
-    final_output = {}
-    for item in formatted_slots:
-        day = item["day"]
-        if day not in final_output:
-            final_output[day] = []
-        final_output[day].append({"start": item["start"], "end": item["end"]})
+    if not specialist:
+        raise HTTPException(status_code=404, detail="Specialist not found")
+
+    all_requested_chunks = []
+    try:
+        for s in data.slots:
+            chunks = generate_iso_chunks(s.day, s.start, s.end)
+            all_requested_chunks.extend(chunks)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid date or time format")
+
+    available_set = set(specialist.available_slots)
+    to_be_booked = [chunk for chunk in all_requested_chunks if chunk in available_set]
+
+    if not to_be_booked:
+        raise HTTPException(status_code=400, detail="Requested slots are not available")
+
+    try:
+        specialist.update(pull_all__available_slots=to_be_booked)
+        
+        current_user.update(
+            set__appointments=to_be_booked,
+            set__reserved_specialist_fname=specialist.fname,
+            set__reserved_specialist_lname=specialist.lname
+        )
+
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database update failed")
 
     return {
-        "fname": user.fname,
-        "lname": user.lname,
-        "slots": final_output
+        "status": "success",
     }
