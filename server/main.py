@@ -25,6 +25,8 @@ from profile.set_user_profile import router as user_profile_router
 # --- Reservation Routers ---
 from reservation.set_spe_avi_slots import router as spe_slots_router
 from reservation.set_user_slot import router as user_slots_router
+from reservation.get_reserved_slots import router as reserved_slots_router
+
 
 
 # --- Include Routers ---
