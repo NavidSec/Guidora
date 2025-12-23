@@ -22,7 +22,6 @@ class AuthRequest(BaseModel):
     token: str
 
 def verify_jwt_and_uid(token: str, request_uid: str):
-    """تایید هویت با JWT مطابق اسکریپت‌های قبلی"""
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         token_uid = payload.get("uid")
@@ -33,7 +32,6 @@ def verify_jwt_and_uid(token: str, request_uid: str):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 def consolidate_slots(iso_slots: List[str]) -> List[Dict]:
-    """تبدیل اسلات‌های ۳۰ دقیقه‌ای به بازه‌های زمانی پیوسته"""
     if not iso_slots:
         return []
 
@@ -65,29 +63,24 @@ def consolidate_slots(iso_slots: List[str]) -> List[Dict]:
 
 @router.post("/get_reserved_slots")
 async def get_user_appointments(data: AuthRequest):
-    # ۱. تایید هویت با JWT
     verify_jwt_and_uid(data.token, data.uid)
 
-    # ۲. پیدا کردن کاربر
     user = User.objects(uid=data.uid).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # ۳. استخراج نوبت‌ها
     raw_slots = user.appointments
     if not raw_slots:
         return {
-            "fname": user.fname,
-            "lname": user.lname,
-            "specialist": None,
+            "user_fname": user.fname,
+            "user_lname": user.lname,
+            "specialist_fname": None,
+            "specialist_lname": None,
             "slots": {}
         }
-
-    # ۴. پیدا کردن متخصصی که کاربر با او نوبت دارد
-    # طبق منطق قبلی، نوبت‌ها از لیست متخصص کسر شده بود. 
-    # برای نمایش نام متخصص، باید متخصصی را پیدا کنیم که این اسلات‌ها در دیتابیس او نیست (چون رزرو شده)
-    # اما ساده‌ترین راه برای نسخه فعلی این است که نام متخصص را در زمان رزرو در یک فیلد ذخیره کرده باشید.
-    # در غیر این صورت، اینجا فقط نوبت‌ها را بر اساس روز دسته‌بندی می‌کنیم:
+    
+    spe_fname = getattr(user, 'reserved_specialist_fname', "Unknown")
+    spe_lname = getattr(user, 'reserved_specialist_lname', "")
     
     formatted_slots = consolidate_slots(raw_slots)
     
@@ -99,7 +92,7 @@ async def get_user_appointments(data: AuthRequest):
         final_output[day].append({"start": item["start"], "end": item["end"]})
 
     return {
-        "fname": user.fname,
-        "lname": user.lname,
+        "fname": spe_fname,
+        "lname": spe_lname,
         "slots": final_output
     }
