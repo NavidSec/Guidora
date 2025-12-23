@@ -2,11 +2,9 @@ from fastapi import FastAPI
 
 app = FastAPI(title="Guidora App")
 
-
 @app.get("/")
 def read_root():
-    return {"Welcome to Guidora API!  Navidsec Inc."}
-
+    return {"message": "Welcome to Guidora API! Navidsec Inc."}
 
 # --- Auth Routers ---
 from auth.send_otp import router as send_otp_router
@@ -27,26 +25,23 @@ from reservation.set_spe_avi_slots import router as spe_slots_router
 from reservation.set_user_slot import router as user_slots_router
 from reservation.get_reserved_slots import router as reserved_slots_router
 
-
-
 # --- Include Routers ---
 
-# Test routes (ping, health check, etc.)
+# Auth routes
+app.include_router(send_otp_router, prefix="/auth", tags=["Auth"])
+app.include_router(verify_otp_router, prefix="/auth", tags=["Auth"])
+app.include_router(set_info_router, prefix="/auth", tags=["Auth"])
+app.include_router(check_jwt_router, prefix="/auth", tags=["Auth"])
 
-# Auth routes (OTP, registration, user info)
-app.include_router(send_otp_router, prefix="/auth")
-app.include_router(verify_otp_router, prefix="/auth")
-app.include_router(set_info_router, prefix="/auth")
-app.include_router(check_jwt_router, prefix="/auth")
+# Home routes
+app.include_router(homepage_router, prefix="/home", tags=["Home"])
+app.include_router(get_spe_info_router, prefix="/home", tags=["Home"]) 
 
-# Home routes (homepage, user listings)
-app.include_router(homepage_router, prefix="/home")
-app.include_router(users_router, prefix="/home")
+# Profile routes
+app.include_router(spe_profile_router, prefix="/profile", tags=["Profile"])
+app.include_router(user_profile_router, prefix="/profile", tags=["Profile"])
 
-# Profile routes (specialist and user profiles)
-app.include_router(spe_profile_router, prefix="/profile")
-app.include_router(user_profile_router, prefix="/profile")
-
-# Reservation routes (specialist and user slots)
-app.include_router(spe_slots_router, prefix="/reservation")
-app.include_router(user_slots_router, prefix="/reservation")
+# Reservation routes
+app.include_router(spe_slots_router, prefix="/reservation", tags=["Reservation"])
+app.include_router(user_slots_router, prefix="/reservation", tags=["Reservation"])
+app.include_router(reserved_slots_router, prefix="/reservation", tags=["Reservation"]) 
