@@ -88,6 +88,8 @@ class User(BaseUser):
     last_specialist_uid = StringField(null=True)
     reserved_specialist_fname = StringField(null=True)
     reserved_specialist_lname = StringField(null=True)
+    reserved_specialist_number = StringField(required=True, regex=PHONE_RE)
+
 
 class Specialties(BaseUser):
     meta = {'collection': 'specialties'}

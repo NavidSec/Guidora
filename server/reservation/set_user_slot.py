@@ -48,7 +48,7 @@ def generate_iso_chunks(day_str, start_str, end_str):
     chunks = []
     cur = start_dt
     while cur < end_dt:
-        iso = cur.isoformat().replace("+00:00", "Z")
+        iso = cur.strftime("%Y-%m-%dT%H:%MZ") 
         chunks.append(iso)
         cur += timedelta(minutes=30)
     return chunks
@@ -80,15 +80,17 @@ async def set_user_slot(data: ReservationRequest):
     to_be_booked = [chunk for chunk in all_requested_chunks if chunk in available_set]
 
     if not to_be_booked or len(to_be_booked) != len(all_requested_chunks):
-        raise HTTPException(status_code=400, detail="Some requested slots are not available")
+        raise HTTPException(status_code=400, detail="این زمان رزرو شده!  زمان دیگری را انتخاب کنید")
 
     try:
         specialist.update(pull_all__available_slots=to_be_booked)
+
         current_user.update(
             set__appointments=to_be_booked,
             set__last_specialist_uid=specialist.uid,
             set__reserved_specialist_fname=specialist.fname,
-            set__reserved_specialist_lname=specialist.lname
+            set__reserved_specialist_lname=specialist.lname,
+            set__reserved_specialist_number=specialist.number
         )
     except Exception:
         raise HTTPException(status_code=500, detail="Database update failed")
