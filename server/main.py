@@ -23,7 +23,8 @@ from profile.set_user_profile import router as user_profile_router
 # --- Reservation Routers ---
 from reservation.set_spe_avi_slots import router as spe_slots_router
 from reservation.set_user_slot import router as user_slots_router
-from reservation.get_reserved_slots import router as reserved_slots_router
+from reservation.get_reserved_slots import router as get_reserved_slots_router
+from reservation.del_reserved_slots import router as del_reserved_slots_router  # <-- اصلاح شد
 
 # --- Include Routers ---
 
@@ -44,4 +45,5 @@ app.include_router(user_profile_router, prefix="/profile", tags=["Profile"])
 # Reservation routes
 app.include_router(spe_slots_router, prefix="/reservation", tags=["Reservation"])
 app.include_router(user_slots_router, prefix="/reservation", tags=["Reservation"])
-app.include_router(reserved_slots_router, prefix="/reservation", tags=["Reservation"]) 
+app.include_router(get_reserved_slots_router, prefix="/reservation", tags=["Reservation"])
+app.include_router(del_reserved_slots_router, prefix="/reservation", tags=["Reservation"])  # <-- اصلاح شد
